@@ -1,3 +1,5 @@
 db
 static
 my.cnf
+*.swp
+*.pyc
