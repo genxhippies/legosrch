@@ -5,5 +5,6 @@ import views
 
 urlpatterns = [
     # Examples:
-    url(r'item_number/(?P<num>[0-9A-Za-z]+)/', views.item_number),
+    url(r'item_number/(?P<num>[0-9A-Za-z]+)/', views.item_number2),
+    #url(r'item_number2/(?P<num>[0-9A-Za-z]+)/', views.item_number2),
 ]

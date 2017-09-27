@@ -9,6 +9,7 @@ from django.http import HttpResponse
 
 import json
 import urllib2
+import re
 
 class ItemNotFoundException(Exception):
     pass
@@ -100,6 +101,25 @@ def _get_from_wikia(opener, num):
 
     return resp
 
+# https://sp1004f1fe.guided.ss-omtrdc.net/?do=json-db&callback=json&count=18&q=10220&cc=us&lang=en&jsonp=jsonCallback
+def _get_from_lego_dot_com(opener, num):
+    request = _make_request('https://sp1004f1fe.guided.ss-omtrdc.net/?do=json-db&callback=json&count=18&q={query}&cc=us&lang=en&jsonp=jsonCallback'.format(query=num))
+    body = opener.open(request).read()
+    # removes "jsonCallback( .. )"
+    # request url에서 jsonp=jsonCallback query parameter를 제거해도 같은 효과이지만, 웹 페이지에서 부르는 것와 패턴을 맞추기 위해서 살려둠
+    body = re.sub( ' \)', '', re.sub( 'jsonCallback\(', '', body), re.M )
+    srch_result = json.loads(body)
+    resp = []
+    for i in srch_result['results']:
+        if i['product_code'] == num:
+            d = {}
+            #d['title'] = i['name_html']
+            d['title'] = i['seo_path']
+            d['image'] = i['media']
+            d['product_code'] = i['product_code']
+            resp.append(d)
+    return resp
+
 def item_number(request, num):
     resp = {}
     resp['item_number'] = num
@@ -111,6 +131,23 @@ def item_number(request, num):
         resp['items'] = []
     except Exception:
         # XXX: logging required
+        resp['items'] = []
+
+    return HttpResponse(json.dumps(resp, indent=2), content_type="application/json")
+
+def item_number2(request, num):
+    resp = {}
+    resp['item_number'] = num
+
+    opener = urllib2.build_opener()
+    try:
+        resp['items'] = _get_from_lego_dot_com(opener, num)
+    except (KeyError, ItemNotFoundException) as e:
+        print e
+        resp['items'] = []
+    except Exception as e:
+        # XXX: logging required
+        print e
         resp['items'] = []
 
     return HttpResponse(json.dumps(resp, indent=2), content_type="application/json")
