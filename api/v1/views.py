@@ -19,6 +19,7 @@ def _make_request(url):
     request.add_header('User-Agent', 'LegoSrchBot/1.0 +http://iizs.net/legosrch')
     return request
 
+# TODO remove
 def _get_set_info(opener, num):
     request = _make_request('http://lego.wikia.com/api/v1/Articles/List/?category=Sets_by_item_number&limit=100')
     body = opener.open(request).read()
@@ -42,6 +43,7 @@ def _get_set_info(opener, num):
 
     return candidate
 
+# TODO remove
 def _get_set_list(opener, set_info, limit=100, offset=None):
     url = 'http://lego.wikia.com/api/v1/Articles/List/?category={c}&limit={l}&namespaces=0&{offsetparam}'.format(
         c = set_info['url'].replace('/wiki/Category:', ''),
@@ -53,6 +55,7 @@ def _get_set_list(opener, set_info, limit=100, offset=None):
     set_list = json.loads(body)
     return set_list
 
+# TODO remove
 def _get_from_wikia(opener, num):
     set_info = _get_set_info(opener, num)
 
@@ -101,7 +104,6 @@ def _get_from_wikia(opener, num):
 
     return resp
 
-# https://sp1004f1fe.guided.ss-omtrdc.net/?do=json-db&callback=json&count=18&q=10220&cc=us&lang=en&jsonp=jsonCallback
 def _get_from_lego_dot_com(opener, num):
     request = _make_request('https://sp1004f1fe.guided.ss-omtrdc.net/?do=json-db&callback=json&count=18&q={query}&cc=us&lang=en&jsonp=jsonCallback'.format(query=num))
     body = opener.open(request).read()
@@ -113,13 +115,22 @@ def _get_from_lego_dot_com(opener, num):
     for i in srch_result['results']:
         if i['product_code'] == num:
             d = {}
-            #d['title'] = i['name_html']
-            d['title'] = i['seo_path']
+            d['id'] = i['seo_path']     # seems to be a nomalized ascii name
+            d['title'] = i['name_html'] # contains special characters
             d['image'] = i['media']
             d['product_code'] = i['product_code']
+            d['piece_count'] = i['piece_count']
+            d['skus'] = []
+            for l in i['skus']:
+                s = {}
+                s['sku_number'] = l['sku_number']
+                s['list_price'] = l['list_price']
+                s['list_price_formatted'] = l['list_price_formatted']
+                d['skus'].append(s)
             resp.append(d)
     return resp
 
+# TODO remove
 def item_number(request, num):
     resp = {}
     resp['item_number'] = num
