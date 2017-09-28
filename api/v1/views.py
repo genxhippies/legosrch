@@ -117,15 +117,16 @@ def _get_from_lego_dot_com(opener, num):
             d = {}
             d['id'] = i['seo_path']     # seems to be a nomalized ascii name
             d['title'] = i['name_html'] # contains special characters
-            d['image'] = i['media']
+            d['image'] = [ i['media'] ]
             d['product_code'] = i['product_code']
             d['piece_count'] = i['piece_count']
             d['skus'] = []
             for l in i['skus']:
                 s = {}
                 s['sku_number'] = l['sku_number']
-                s['list_price'] = l['list_price']
+                s['price'] = l['list_price']   # can be null
                 s['list_price_formatted'] = l['list_price_formatted']
+                s['shop_url'] = 'https://shop.lego.com/en-US/{seo_id}'.format(seo_id=d['id'])
                 d['skus'].append(s)
             resp.append(d)
     return resp
