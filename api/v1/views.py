@@ -115,7 +115,7 @@ def _get_from_lego_dot_com(opener, num):
     for i in srch_result['results']:
         if i['product_code'] == num:
             d = {}
-            d['id'] = i['seo_path']     # seems to be a nomalized ascii name
+            d['product_id'] = i['seo_path']     # seems to be a nomalized ascii name
             d['title'] = i['name_html'] # contains special characters
             d['image'] = [ i['media'] ]
             d['product_code'] = i['product_code']
