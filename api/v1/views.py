@@ -11,6 +11,8 @@ import json
 import urllib2
 import re
 
+from api.models import LegoProduct, LegoProductImage, LegoProductSku
+
 class ItemNotFoundException(Exception):
     pass
 
@@ -33,6 +35,8 @@ def _get_from_lego_dot_com(opener, num):
     body = re.sub( ' \)', '', re.sub( 'jsonCallback\(', '', body), re.M )
 
     srch_result = json.loads(body)
+
+    # TODO: make resp dict more reliable, reusable
     resp = []
     for i in srch_result['results']:
         if i['product_code'] == num:
@@ -47,26 +51,92 @@ def _get_from_lego_dot_com(opener, num):
                 s = {}
                 s['sku_number'] = l['sku_number']
                 s['price'] = l['list_price']   # can be null
-                s['list_price_formatted'] = l['list_price_formatted']
+                #s['list_price_formatted'] = l['list_price_formatted']
+                s['site'] = 'lego.com (US)'
                 s['shop_url'] = 'https://shop.lego.com/en-US/{seo_id}'.format(seo_id=d['product_id'])
                 s['currency'] = srch_result['currency_code']
                 d['skus'].append(s)
             resp.append(d)
     return resp
 
+def _get_from_db(num):
+    result = LegoProduct.objects.filter(product_code = num)
+
+    if len(result) == 0:
+        return None
+
+    resp = []
+    for i in result:
+        d = {}
+        d['product_id'] = i.product_id
+        d['title'] = i.title
+        d['product_code'] = str(i.product_code)
+        d['piece_count'] = i.piece_count
+        d['datetime_updated'] = str(i.datetime_updated)
+        d['image'] = []
+        images = LegoProductImage.objects.filter( lego_product = i )
+        for img in images:
+            d['image'].append( img.img_url )
+        d['skus'] = []
+        skus = LegoProductSku.objects.filter( lego_product = i )
+        for sku in skus:
+            s = {}
+            s['sku_number'] = sku.sku_number
+            s['price'] = sku.price
+            #s['list_price_formatted'] = l['list_price_formatted']
+            s['shop_url'] = sku.product_url
+            s['currency'] = sku.currency
+            s['site'] = sku.site
+            d['skus'].append(s)
+        resp.append(d)
+    
+    return resp
+
+def _put_to_db(num, items):
+    for i in items:
+        product = LegoProduct(
+            product_id = i['product_id'],
+            title = i['title'],
+            product_code = i['product_code'],
+            piece_count = i['piece_count'],
+        )
+        product.save()
+
+        for img in i['image']:
+            image = LegoProductImage(
+                lego_product = product,
+                img_url = img,
+            )
+            image.save()
+
+        for s in i['skus']:
+            sku = LegoProductSku(
+                lego_product = product,
+                site = s['site'],
+                sku_number = s['sku_number'],
+                price = s['price'],
+                currency = s['currency'],
+                product_url = s['shop_url'],
+            )
+            sku.save()
+    return
+
 def item_number(request, num):
     resp = {}
     resp['item_number'] = num
 
-    opener = urllib2.build_opener()
-    try:
-        resp['items'] = _get_from_lego_dot_com(opener, num)
-    except (KeyError, ItemNotFoundException) as e:
-        print e
-        resp['items'] = []
-    except Exception as e:
-        # XXX: logging required
-        print e
-        resp['items'] = []
+    resp['items'] = _get_from_db(num)
+    if resp['items'] == None:
+        opener = urllib2.build_opener()
+        try:
+            resp['items'] = _get_from_lego_dot_com(opener, num)
+            _put_to_db(num, resp['items'])
+        except (KeyError, ItemNotFoundException) as e:
+            print e
+            resp['items'] = []
+        except Exception as e:
+            # XXX: logging required
+            print e
+            resp['items'] = []
 
     return HttpResponse(json.dumps(resp, indent=2), content_type="application/json")
