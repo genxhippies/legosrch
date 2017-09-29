@@ -134,6 +134,7 @@ def _get_from_lego_dot_com(opener, num):
                 s['price'] = l['list_price']   # can be null
                 s['list_price_formatted'] = l['list_price_formatted']
                 s['shop_url'] = 'https://shop.lego.com/en-US/{seo_id}'.format(seo_id=d['product_id'])
+                s['currency'] = srch_result['currency_code']
                 d['skus'].append(s)
             resp.append(d)
     return resp
