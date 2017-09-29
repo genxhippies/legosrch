@@ -17,7 +17,7 @@ class LegoProductSku(models.Model):
     lego_product = models.ForeignKey('LegoProduct')
     site = models.CharField(max_length=255)
     sku_number = models.CharField(max_length=40)
-    price = models.FloatField()
+    price = models.FloatField(null=True)
     currency = models.CharField(max_length=3)
     product_url = models.TextField()
     datetime_updated = models.DateTimeField('datetime updated', auto_now_add=True)
