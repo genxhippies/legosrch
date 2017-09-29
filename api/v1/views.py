@@ -140,7 +140,7 @@ def _get_from_lego_dot_com(opener, num):
     return resp
 
 # TODO remove
-def item_number(request, num):
+def item_number_old(request, num):
     resp = {}
     resp['item_number'] = num
 
@@ -155,7 +155,7 @@ def item_number(request, num):
 
     return HttpResponse(json.dumps(resp, indent=2), content_type="application/json")
 
-def item_number2(request, num):
+def item_number(request, num):
     resp = {}
     resp['item_number'] = num
 
