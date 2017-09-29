@@ -9,9 +9,21 @@ class LegoProduct(models.Model):
     piece_count = models.IntegerField()
     datetime_updated = models.DateTimeField('datetime updated', auto_now_add=True)
 
+    def __unicode__(self):
+        return '{code}: {title}'.format(
+            code = self.product_code,
+            title = self.title,
+        )
+
 class LegoProductImage(models.Model):
     lego_product = models.ForeignKey('LegoProduct')
     img_url = models.TextField()
+
+    def __unicode__(self):
+        return '{prod} - {url}'.format(
+            prod = unicode(self.lego_product),
+            url = self.img_url,
+        )
 
 class LegoProductSku(models.Model):
     lego_product = models.ForeignKey('LegoProduct')
@@ -26,4 +38,12 @@ class LegoProductSku(models.Model):
         unique_together = (
             ( "lego_product", "site", "sku_number" ),
         )
+
+    def __unicode__(self):
+        return '{prod} - {sku} @ {site}'.format(
+            prod = unicode(self.lego_product),
+            sku = self.sku_number,
+            site = self.site,
+        )
+
     
