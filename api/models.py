@@ -5,7 +5,7 @@ from django.db import models
 class LegoProduct(models.Model):
     product_id = models.CharField(max_length=255, unique=True)
     title = models.CharField(max_length=255)
-    product_code = models.IntegerField()
+    product_code = models.IntegerField(db_index=True)
     piece_count = models.IntegerField()
     datetime_updated = models.DateTimeField('datetime updated', auto_now_add=True)
 
